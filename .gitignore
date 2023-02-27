@@ -1,0 +1,11 @@
+*
+!*/
+!*.rs
+!*.toml
+!*.lock
+!*.md
+!.gitignore
+!Makefile
+!LICENSE
+!author
+target/
