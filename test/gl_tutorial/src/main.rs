@@ -1,8 +1,11 @@
 extern crate gl;
 extern crate sdl2;
 use std::ffi::{CStr, CString};
+use std::time;
 
 mod mat;
+
+use mat::{Point, Axis, Matrix};
 
 fn main() {
     if let Err(e) = run() {
@@ -19,8 +22,10 @@ fn run() -> Result<(), String>{
     gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
     gl_attr.set_context_version(3, 2);
 
+    let window_size = (900, 700);
+
     let window = video_subsystem
-        .window("Test", 900, 700)
+        .window("Test", window_size.0, window_size.1)
         .opengl()
         .resizable()
         .build()
@@ -41,43 +46,43 @@ fn run() -> Result<(), String>{
     //     1.0, -1.0, 0.0,
     //     0.0, 1.0, 0.0
     // ];
-    let vertices: Vec<f32> = vec![
-        -0.5,-0.5,-0.5,
-        -0.5,-0.5, 0.5,
-        -0.5, 0.5, 0.5,
-        0.5, 0.5,-0.5,
-        -0.5,-0.5,-0.5,
-        -0.5, 0.5,-0.5,
-        0.5,-0.5, 0.5,
-        -0.5,-0.5,-0.5,
-        0.5,-0.5,-0.5,
-        0.5, 0.5,-0.5,
-        0.5,-0.5,-0.5,
-        -0.5,-0.5,-0.5,
-        -0.5,-0.5,-0.5,
-        -0.5, 0.5, 0.5,
-        -0.5, 0.5,-0.5,
-        0.5,-0.5, 0.5,
-        -0.5,-0.5, 0.5,
-        -0.5,-0.5,-0.5,
-        -0.5, 0.5, 0.5,
-        -0.5,-0.5, 0.5,
-        0.5,-0.5, 0.5,
-        0.5, 0.5, 0.5,
-        0.5,-0.5,-0.5,
-        0.5, 0.5,-0.5,
-        0.5,-0.5,-0.5,
-        0.5, 0.5, 0.5,
-        0.5,-0.5, 0.5,
-        0.5, 0.5, 0.5,
-        0.5, 0.5,-0.5,
-        -0.5, 0.5,-0.5,
-        0.5, 0.5, 0.5,
-        -0.5, 0.5,-0.5,
-        -0.5, 0.5, 0.5,
-        0.5, 0.5, 0.5,
-        -0.5, 0.5, 0.5,
-        0.5,-0.5, 0.5
+    let mut vertices: Vec<Point> = vec![
+        Point::new(-0.5,-0.5,-0.5),
+        Point::new(-0.5,-0.5, 0.5),
+        Point::new(-0.5, 0.5, 0.5),
+        Point::new(0.5, 0.5,-0.5),
+        Point::new(-0.5,-0.5,-0.5),
+        Point::new(-0.5, 0.5,-0.5),
+        Point::new(0.5,-0.5, 0.5),
+        Point::new(-0.5,-0.5,-0.5),
+        Point::new(0.5,-0.5,-0.5),
+        Point::new(0.5, 0.5,-0.5),
+        Point::new(0.5,-0.5,-0.5),
+        Point::new(-0.5,-0.5,-0.5),
+        Point::new(-0.5,-0.5,-0.5),
+        Point::new(-0.5, 0.5, 0.5),
+        Point::new(-0.5, 0.5,-0.5),
+        Point::new(0.5,-0.5, 0.5),
+        Point::new(-0.5,-0.5, 0.5),
+        Point::new(-0.5,-0.5,-0.5),
+        Point::new(-0.5, 0.5, 0.5),
+        Point::new(-0.5,-0.5, 0.5),
+        Point::new(0.5,-0.5, 0.5),
+        Point::new(0.5, 0.5, 0.5),
+        Point::new(0.5,-0.5,-0.5),
+        Point::new(0.5, 0.5,-0.5),
+        Point::new(0.5,-0.5,-0.5),
+        Point::new(0.5, 0.5, 0.5),
+        Point::new(0.5,-0.5, 0.5),
+        Point::new(0.5, 0.5, 0.5),
+        Point::new(0.5, 0.5,-0.5),
+        Point::new(-0.5, 0.5,-0.5),
+        Point::new(0.5, 0.5, 0.5),
+        Point::new(-0.5, 0.5,-0.5),
+        Point::new(-0.5, 0.5, 0.5),
+        Point::new(0.5, 0.5, 0.5),
+        Point::new(-0.5, 0.5, 0.5),
+        Point::new(0.5,-0.5, 0.5)
     ];
     let color_data: Vec<f32> = vec![
         0.583,  0.771,  0.014,
@@ -118,13 +123,19 @@ fn run() -> Result<(), String>{
         0.982,  0.099,  0.879
     ];
 
+    // for vertex in &mut vertices {
+    //     *vertex = rotate_one_axis(vertex, Axis::X, std::f32::consts::FRAC_PI_4);
+    //     *vertex = rotate_one_axis(vertex, Axis::Y, std::f32::consts::FRAC_PI_4);
+    //     *vertex = rotate_one_axis(vertex, Axis::Z, std::f32::consts::FRAC_PI_4);
+    // }
+
     let mut vbo: gl::types::GLuint = 0;
     unsafe {
         gl::GenBuffers(1, &mut vbo);
         gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
         gl::BufferData(
             gl::ARRAY_BUFFER,
-            (vertices.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
+            (vertices.len() * std::mem::size_of::<Point>()) as gl::types::GLsizeiptr,
             vertices.as_ptr() as *const gl::types::GLvoid,
             gl::STATIC_DRAW,
         );
@@ -179,17 +190,74 @@ fn run() -> Result<(), String>{
         &CString::new(include_str!("triangle.frag")).map_err(|_| "error: fragment shader".to_string())?
     )?;
 
+    // let translation_matrix = Matrix::make_translation_matrix(0.25, 0.25, 0.0);
+    // // let translation_matrix = Matrix::make_translation_matrix(0.25, 0.25, -1.0);
+    // let translation_matrix_name = CString::new("Translation").map_err(|_| "error: GetUniformLocation".to_string())?;
+    // let translation_matrix_id = unsafe {gl::GetUniformLocation(program_id, translation_matrix_name.as_ptr()) };
+    // let translation_matrix_ptr = unsafe { std::mem::transmute(&translation_matrix) };
+
+    let translation_matrix_name = CString::new("Translation").map_err(|_| "error: GetUniformLocation".to_string())?;
+    let translation_matrix_id = unsafe {gl::GetUniformLocation(program_id, translation_matrix_name.as_ptr()) };
+
+    let direction_vec = Point::new(-1.0, 1.0, -1.0).normalize();
+    let rotation_matrix = Matrix::make_rotate_matrix(&direction_vec, std::f32::consts::FRAC_PI_4);
+    // let matrix = Matrix::make_rotate_one_axis_matrix(Axis::X, std::f32::consts::FRAC_PI_8);
+    let rotation_matrix_name = CString::new("Rotation").map_err(|_| "error: GetUniformLocation".to_string())?;
+    let rotation_matrix_id = unsafe {gl::GetUniformLocation(program_id, rotation_matrix_name.as_ptr()) };
+    let rotation_matrix_ptr = unsafe { std::mem::transmute(&rotation_matrix) };
+
+    let projection_matrix = Matrix::make_perspective_projection_matrix(
+        std::f32::consts::FRAC_PI_3,
+        window_size.0 as f32 / window_size.1 as f32,
+        0.1,
+        100.0
+    );
+    let projection_matrix_name = CString::new("Projection").map_err(|_| "error: GetUniformLocation".to_string())?;
+    let projection_matrix_id = unsafe {gl::GetUniformLocation(program_id, projection_matrix_name.as_ptr()) };
+    let projection_matrix_ptr = unsafe { std::mem::transmute(&projection_matrix) };
+
+    let mut translation_x = 0.0;
+    let mut translation_y = 0.0;
+
+    let mut before_timestamp = time::Instant::now();
+
+    let speed = 0.5;
+
     let mut event_pump = sdl.event_pump()?;
     'main: loop {
+        let new_timestamp = time::Instant::now();
         for event in event_pump.poll_iter() {
             match event {
                 sdl2::event::Event::Quit { .. } => break 'main,
+                sdl2::event::Event::MouseMotion {
+                    timestamp: _,
+                    window_id: _,
+                    which: _,
+                    mousestate,
+                    x: _,
+                    y: _,
+                    xrel,
+                    yrel
+                } => {
+                    let diff_timestamp = new_timestamp.duration_since(before_timestamp).as_millis();
+                    if mousestate.left() {
+                        translation_x += xrel as f32 * speed * diff_timestamp as f32 / 1000.0;
+                        translation_y -= yrel as f32 * speed * diff_timestamp as f32 / 1000.0;
+                    }
+                }
                 _ => {}
             }
         }
+        before_timestamp = new_timestamp;
+
+        let translation_matrix = Matrix::make_translation_matrix(translation_x, translation_y, 0.0);
+        let translation_matrix_ptr = unsafe { std::mem::transmute(&translation_matrix) };
 
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+            gl::UniformMatrix4fv(translation_matrix_id, 1, gl::TRUE, translation_matrix_ptr);
+            gl::UniformMatrix4fv(rotation_matrix_id, 1, gl::TRUE, rotation_matrix_ptr);
+            gl::UniformMatrix4fv(projection_matrix_id, 1, gl::TRUE, projection_matrix_ptr);
             gl::UseProgram(program_id);
             gl::DrawArrays(
                 gl::TRIANGLES,
