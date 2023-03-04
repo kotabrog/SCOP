@@ -79,8 +79,66 @@ impl Matrix {
         Matrix::new([
             [frac_tan, 0.0, 0.0, 0.0],
             [0.0, frac_tan * aspect, 0.0, 0.0],
-            [0.0, 0.0, (far + near) / (far - near), 0.0],
-            [0.0, 0.0, -(2.0 * far * near) / (far - near), 1.0],
+            [0.0, 0.0, (far + near) / (far - near), -1.0],
+            [0.0, 0.0, -(2.0 * far * near) / (far - near), 0.0],
+        ])
+    }
+
+    pub fn mul(&self, rhs: &Self) -> Self {
+        let mut matrix = Matrix::new([
+            [0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0],
+        ]);
+        for i in 0..4 {
+            for j in 0..4 {
+                matrix.elem[i][j] = self.mul_i_j(rhs, i, j)
+            }
+        }
+        matrix
+    }
+
+    fn mul_i_j(&self, rhs: &Self, i: usize, j: usize) -> f32 {
+        let mut ret = 0.0;
+        for k in 0..4 {
+            ret += self.elem[i][k] * rhs.elem[k][j];
+        }
+        ret
+    }
+
+    pub fn normalize_part(&self) -> Self {
+        let mut matrix = self.clone();
+        for i in 0..3 {
+            let mut norm = 0.0;
+            for j in 0..3 {
+                norm += self.elem[i][j] * self.elem[i][j];
+            }
+            norm = norm.sqrt();
+            for j in 0..3 {
+                matrix.elem[i][j] = self.elem[i][j] / norm;
+            }
+        }
+        matrix
+    }
+
+    pub fn orthonormalization(&self) -> Self {
+        let x1 = Point::new(self.elem[0][0], self.elem[0][1], self.elem[0][2]);
+        let a2 = Point::new(self.elem[1][0], self.elem[1][1], self.elem[1][2]);
+        let a3 = Point::new(self.elem[2][0], self.elem[2][1], self.elem[2][2]);
+        let x2 = a2.minus(&x1.mul(a2.inner_product(&x1) / x1.inner_product(&x1)));
+        let x3 = a3.minus(
+            &x1.mul(a3.inner_product(&x1) / x1.inner_product(&x1)).add(
+            &x2.mul(a3.inner_product(&x2) / x2.inner_product(&x2))
+        ));
+        let x1 = x1.normalize();
+        let x2 = x2.normalize();
+        let x3 = x3.normalize();
+        Self::new([
+            [x1.d0, x1.d1, x1.d2, 0.0],
+            [x2.d0, x2.d1, x2.d2, 0.0],
+            [x3.d0, x3.d1, x3.d2, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
         ])
     }
 }
@@ -96,8 +154,23 @@ impl Point {
 
     pub fn normalize(&self) -> Self {
         let length = self.length();
-
         Self::new(self.d0 / length, self.d1 / length, self.d2 / length)
+    }
+
+    pub fn inner_product(&self, rhs: &Self) -> f32 {
+        self.d0 * rhs.d0 + self.d1 * rhs.d1 + self.d2 * rhs.d2
+    }
+
+    pub fn add(&self, rhs: &Self) -> Self {
+        (self.d0 + rhs.d0, self.d1 + rhs.d1, self.d2 + rhs.d2).into()
+    }
+
+    pub fn minus(&self, rhs: &Self) -> Self {
+        (self.d0 - rhs.d0, self.d1 - rhs.d1, self.d2 - rhs.d2).into()
+    }
+
+    pub fn mul(&self, rhs: f32) -> Self {
+        (self.d0 * rhs, self.d1 * rhs, self.d2 * rhs).into()
     }
 }
 

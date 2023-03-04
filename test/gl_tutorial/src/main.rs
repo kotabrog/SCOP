@@ -190,27 +190,17 @@ fn run() -> Result<(), String>{
         &CString::new(include_str!("triangle.frag")).map_err(|_| "error: fragment shader".to_string())?
     )?;
 
-    // let translation_matrix = Matrix::make_translation_matrix(0.25, 0.25, 0.0);
-    // // let translation_matrix = Matrix::make_translation_matrix(0.25, 0.25, -1.0);
-    // let translation_matrix_name = CString::new("Translation").map_err(|_| "error: GetUniformLocation".to_string())?;
-    // let translation_matrix_id = unsafe {gl::GetUniformLocation(program_id, translation_matrix_name.as_ptr()) };
-    // let translation_matrix_ptr = unsafe { std::mem::transmute(&translation_matrix) };
-
     let translation_matrix_name = CString::new("Translation").map_err(|_| "error: GetUniformLocation".to_string())?;
     let translation_matrix_id = unsafe {gl::GetUniformLocation(program_id, translation_matrix_name.as_ptr()) };
 
-    let direction_vec = Point::new(-1.0, 1.0, -1.0).normalize();
-    let rotation_matrix = Matrix::make_rotate_matrix(&direction_vec, std::f32::consts::FRAC_PI_4);
-    // let matrix = Matrix::make_rotate_one_axis_matrix(Axis::X, std::f32::consts::FRAC_PI_8);
     let rotation_matrix_name = CString::new("Rotation").map_err(|_| "error: GetUniformLocation".to_string())?;
     let rotation_matrix_id = unsafe {gl::GetUniformLocation(program_id, rotation_matrix_name.as_ptr()) };
-    let rotation_matrix_ptr = unsafe { std::mem::transmute(&rotation_matrix) };
 
     let projection_matrix = Matrix::make_perspective_projection_matrix(
-        std::f32::consts::FRAC_PI_3,
+        std::f32::consts::FRAC_PI_4,
         window_size.0 as f32 / window_size.1 as f32,
-        0.1,
-        100.0
+        -1.0,
+        20.0
     );
     let projection_matrix_name = CString::new("Projection").map_err(|_| "error: GetUniformLocation".to_string())?;
     let projection_matrix_id = unsafe {gl::GetUniformLocation(program_id, projection_matrix_name.as_ptr()) };
@@ -218,10 +208,17 @@ fn run() -> Result<(), String>{
 
     let mut translation_x = 0.0;
     let mut translation_y = 0.0;
+    let mut translation_z = 2.0;
+
+    let mut direction_vec = Point::new(-1.0, 1.0, -1.0).normalize();
+    let mut rotation_matrix = Matrix::make_rotate_matrix(&direction_vec, std::f32::consts::FRAC_PI_4).orthonormalization();
+    let mut rotation_matrix_ptr = unsafe { std::mem::transmute(&rotation_matrix) };
 
     let mut before_timestamp = time::Instant::now();
 
     let speed = 0.5;
+    let wheel_speed = 0.5;
+    let rotation_speed = 0.5;
 
     let mut event_pump = sdl.event_pump()?;
     'main: loop {
@@ -243,6 +240,37 @@ fn run() -> Result<(), String>{
                     if mousestate.left() {
                         translation_x += xrel as f32 * speed * diff_timestamp as f32 / 1000.0;
                         translation_y -= yrel as f32 * speed * diff_timestamp as f32 / 1000.0;
+                    } else if mousestate.middle() {
+                        if yrel == 0 {
+                            let v = if xrel > 0 {1} else {-1} as f32;
+                            direction_vec = Point::new(0.0, v, 0.0);
+                        } else if xrel == 0 {
+                            let v = if yrel > 0 {1} else {-1} as f32;
+                            direction_vec = Point::new(v, 0.0, 0.0);
+                        } else {
+                            direction_vec = Point::new(yrel as f32, xrel as f32, 0.0).normalize();
+                        }
+                        let temp_matrix = Matrix::make_rotate_matrix(
+                            &direction_vec,
+                            std::f32::consts::PI * rotation_speed * diff_timestamp as f32 / 1000.0
+                        );
+                        rotation_matrix = temp_matrix.mul(&rotation_matrix);
+                        rotation_matrix = rotation_matrix.orthonormalization();
+                        rotation_matrix_ptr = unsafe { std::mem::transmute(&rotation_matrix) };
+                    }
+                }
+                sdl2::event::Event::MouseWheel {
+                    timestamp: _,
+                    window_id: _,
+                    which: _,
+                    x: _,
+                    y,
+                    direction
+                } => {
+                    if let sdl2::mouse::MouseWheelDirection::Flipped = direction {
+                        translation_z += y as f32 * wheel_speed;
+                    } else {
+                        translation_z -= y as f32 * wheel_speed;
                     }
                 }
                 _ => {}
@@ -250,7 +278,7 @@ fn run() -> Result<(), String>{
         }
         before_timestamp = new_timestamp;
 
-        let translation_matrix = Matrix::make_translation_matrix(translation_x, translation_y, 0.0);
+        let translation_matrix = Matrix::make_translation_matrix(translation_x, translation_y, translation_z);
         let translation_matrix_ptr = unsafe { std::mem::transmute(&translation_matrix) };
 
         unsafe {
