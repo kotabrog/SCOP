@@ -33,8 +33,12 @@ fn run() -> Result<(), String>{
         // model.set_colors_gradation_colorful();
         model.set_colors_grain();
     } else {
-        model.set_cube_sample();
+        // model.set_cube_sample();
         // model.set_rect_sample();
+        // model.set_rect_uv_sample();
+        model.set_cube_sample_uv();
+        // model.set_colors_grain();
+        model.set_colors_gradation();
     }
 
     let sdl = sdl2::init()?;
@@ -69,6 +73,7 @@ fn run() -> Result<(), String>{
     unsafe {
         gl::ClearColor(0.3, 0.3, 0.3, 1.0);
         gl::Enable(gl::DEPTH_TEST);
+        gl::Enable(gl::TEXTURE_2D);
         gl::DepthFunc(gl::LESS)
     }
 
@@ -82,6 +87,43 @@ fn run() -> Result<(), String>{
         model.get_max_size(),
         window_size
     )?;
+
+    model.set_texture(program.id())?;
+
+    let mut bits: [[[f32; 3]; 64]; 64] = [[[0.0; 3]; 64]; 64];
+    for i in 0..64 {
+        let r = (i * 4) as f32 / 256.0;
+        for j in 0..64 {
+            bits[i][j][0] = r;
+            bits[i][j][1] = (j * 4) as f32 / 256.0;
+            bits[i][j][2] = r;
+        }
+    }
+    let mut tex_id: gl::types::GLuint = 0;
+    unsafe {
+        gl::GenTextures(1, &mut tex_id);
+        gl::BindBuffer(gl::TEXTURE_2D, tex_id);
+    }
+    unsafe {
+        gl::TexImage2D(
+            gl::TEXTURE_2D,
+            0,
+            gl::RGB as i32,
+            64 as i32,
+            64 as i32,
+            0,
+            gl::RGB,
+            gl::FLOAT,
+            // gl::FLOAT,
+            // gl::UNSIGNED_INT,
+            bits.as_ptr() as *const _,
+        );
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+    }
+
 
     let mut before_timestamp = time::Instant::now();
 
@@ -130,6 +172,16 @@ fn run() -> Result<(), String>{
                         mvp.update_translation_wheel(-y as f32)
                     }
                 }
+                sdl2::event::Event::KeyDown {
+                    timestamp: _,
+                    window_id: _,
+                    keycode: Some(sdl2::keyboard::Keycode::F1),
+                    scancode: _,
+                    keymod: sdl2::keyboard::Mod::NOMOD,
+                    repeat: false
+                } => {
+                    model.switch_texture();
+                },
                 _ => {}
             }
         }
@@ -138,8 +190,8 @@ fn run() -> Result<(), String>{
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
         }
-        mvp.set();
         program.set_used();
+        mvp.set();
         model.draw();
         window.gl_swap_window();
     }
