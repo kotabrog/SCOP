@@ -5,7 +5,7 @@ pub struct Matrix {
 
 #[derive(Copy, Clone, Debug)]
 #[repr(C, packed)]
-pub struct Point {
+pub struct Vec3d {
     pub d0: f32,
     pub d1: f32,
     pub d2: f32,
@@ -24,6 +24,15 @@ impl Matrix {
 
     pub fn inner(&mut self) -> &[[f32; 4]; 4] {
         &self.elem
+    }
+
+    pub fn make_scale_matrix(value: f32) -> Self {
+        Matrix::new([
+            [value, 0.0, 0.0, 0.0],
+            [0.0, value, 0.0, 0.0],
+            [0.0, 0.0, value, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
     }
 
     pub fn make_rotate_one_axis_matrix(axis: Axis, theta: f32) -> Self {
@@ -49,7 +58,7 @@ impl Matrix {
         }
     }
 
-    pub fn make_rotate_matrix(vec: &Point, theta: f32) -> Self {
+    pub fn make_rotate_matrix(vec: &Vec3d, theta: f32) -> Self {
         // vec is the normalized direction vector
         let c = theta.cos();
         let s = theta.sin();
@@ -123,9 +132,9 @@ impl Matrix {
     }
 
     pub fn orthonormalization(&self) -> Self {
-        let x1 = Point::new(self.elem[0][0], self.elem[0][1], self.elem[0][2]);
-        let a2 = Point::new(self.elem[1][0], self.elem[1][1], self.elem[1][2]);
-        let a3 = Point::new(self.elem[2][0], self.elem[2][1], self.elem[2][2]);
+        let x1 = Vec3d::new(self.elem[0][0], self.elem[0][1], self.elem[0][2]);
+        let a2 = Vec3d::new(self.elem[1][0], self.elem[1][1], self.elem[1][2]);
+        let a3 = Vec3d::new(self.elem[2][0], self.elem[2][1], self.elem[2][2]);
         let x2 = a2.minus(&x1.mul(a2.inner_product(&x1) / x1.inner_product(&x1)));
         let x3 = a3.minus(
             &x1.mul(a3.inner_product(&x1) / x1.inner_product(&x1)).add(
@@ -143,7 +152,7 @@ impl Matrix {
     }
 }
 
-impl Point {
+impl Vec3d {
     pub fn new(d0: f32, d1: f32, d2: f32) -> Self {
         Self { d0, d1, d2 }
     }
@@ -174,8 +183,8 @@ impl Point {
     }
 }
 
-impl From<(f32, f32, f32)> for Point {
+impl From<(f32, f32, f32)> for Vec3d {
     fn from(other: (f32, f32, f32)) -> Self {
-        Point::new(other.0, other.1, other.2)
+        Vec3d::new(other.0, other.1, other.2)
     }
 }

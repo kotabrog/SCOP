@@ -2,10 +2,17 @@ extern crate gl;
 extern crate sdl2;
 use std::ffi::{CStr, CString};
 use std::time;
+use std::env;
 
 mod mat;
+mod loader;
+mod model;
+mod shader;
 
-use mat::{Point, Axis, Matrix};
+use loader::Loader;
+use mat::{Vec3d, Axis, Matrix};
+use model::Model;
+use shader::Program;
 
 fn main() {
     if let Err(e) = run() {
@@ -14,6 +21,21 @@ fn main() {
 }
 
 fn run() -> Result<(), String>{
+    let mut model = Model::new();
+
+    let args: Vec<String> = env::args().collect();
+    if args.len() == 2 {
+        let loader = Loader::new(args[1].clone());
+        loader.parse(&mut model)?;
+        // model.set_colors_one(1.0);
+        // model.set_colors_gradation();
+        // model.set_colors_gradation_colorful();
+        model.set_colors_grain();
+    } else {
+        model.set_cube_sample();
+        // model.set_rect_sample();
+    }
+
     let sdl = sdl2::init()?;
     let video_subsystem = sdl.video()?;
 
@@ -41,143 +63,8 @@ fn run() -> Result<(), String>{
         gl::BindVertexArray(vao);
     }
 
-    // let vertices: Vec<f32> = vec![
-    //     -1.0, -1.0, 0.0,
-    //     1.0, -1.0, 0.0,
-    //     0.0, 1.0, 0.0
-    // ];
-    let mut vertices: Vec<Point> = vec![
-        Point::new(-0.5,-0.5,-0.5),
-        Point::new(-0.5,-0.5, 0.5),
-        Point::new(-0.5, 0.5, 0.5),
-        Point::new(0.5, 0.5,-0.5),
-        Point::new(-0.5,-0.5,-0.5),
-        Point::new(-0.5, 0.5,-0.5),
-        Point::new(0.5,-0.5, 0.5),
-        Point::new(-0.5,-0.5,-0.5),
-        Point::new(0.5,-0.5,-0.5),
-        Point::new(0.5, 0.5,-0.5),
-        Point::new(0.5,-0.5,-0.5),
-        Point::new(-0.5,-0.5,-0.5),
-        Point::new(-0.5,-0.5,-0.5),
-        Point::new(-0.5, 0.5, 0.5),
-        Point::new(-0.5, 0.5,-0.5),
-        Point::new(0.5,-0.5, 0.5),
-        Point::new(-0.5,-0.5, 0.5),
-        Point::new(-0.5,-0.5,-0.5),
-        Point::new(-0.5, 0.5, 0.5),
-        Point::new(-0.5,-0.5, 0.5),
-        Point::new(0.5,-0.5, 0.5),
-        Point::new(0.5, 0.5, 0.5),
-        Point::new(0.5,-0.5,-0.5),
-        Point::new(0.5, 0.5,-0.5),
-        Point::new(0.5,-0.5,-0.5),
-        Point::new(0.5, 0.5, 0.5),
-        Point::new(0.5,-0.5, 0.5),
-        Point::new(0.5, 0.5, 0.5),
-        Point::new(0.5, 0.5,-0.5),
-        Point::new(-0.5, 0.5,-0.5),
-        Point::new(0.5, 0.5, 0.5),
-        Point::new(-0.5, 0.5,-0.5),
-        Point::new(-0.5, 0.5, 0.5),
-        Point::new(0.5, 0.5, 0.5),
-        Point::new(-0.5, 0.5, 0.5),
-        Point::new(0.5,-0.5, 0.5)
-    ];
-    let color_data: Vec<f32> = vec![
-        0.583,  0.771,  0.014,
-        0.609,  0.115,  0.436,
-        0.327,  0.483,  0.844,
-        0.822,  0.569,  0.201,
-        0.435,  0.602,  0.223,
-        0.310,  0.747,  0.185,
-        0.597,  0.770,  0.761,
-        0.559,  0.436,  0.730,
-        0.359,  0.583,  0.152,
-        0.483,  0.596,  0.789,
-        0.559,  0.861,  0.639,
-        0.195,  0.548,  0.859,
-        0.014,  0.184,  0.576,
-        0.771,  0.328,  0.970,
-        0.406,  0.615,  0.116,
-        0.676,  0.977,  0.133,
-        0.971,  0.572,  0.833,
-        0.140,  0.616,  0.489,
-        0.997,  0.513,  0.064,
-        0.945,  0.719,  0.592,
-        0.543,  0.021,  0.978,
-        0.279,  0.317,  0.505,
-        0.167,  0.620,  0.077,
-        0.347,  0.857,  0.137,
-        0.055,  0.953,  0.042,
-        0.714,  0.505,  0.345,
-        0.783,  0.290,  0.734,
-        0.722,  0.645,  0.174,
-        0.302,  0.455,  0.848,
-        0.225,  0.587,  0.040,
-        0.517,  0.713,  0.338,
-        0.053,  0.959,  0.120,
-        0.393,  0.621,  0.362,
-        0.673,  0.211,  0.457,
-        0.820,  0.883,  0.371,
-        0.982,  0.099,  0.879
-    ];
-
-    // for vertex in &mut vertices {
-    //     *vertex = rotate_one_axis(vertex, Axis::X, std::f32::consts::FRAC_PI_4);
-    //     *vertex = rotate_one_axis(vertex, Axis::Y, std::f32::consts::FRAC_PI_4);
-    //     *vertex = rotate_one_axis(vertex, Axis::Z, std::f32::consts::FRAC_PI_4);
-    // }
-
-    let mut vbo: gl::types::GLuint = 0;
-    unsafe {
-        gl::GenBuffers(1, &mut vbo);
-        gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-        gl::BufferData(
-            gl::ARRAY_BUFFER,
-            (vertices.len() * std::mem::size_of::<Point>()) as gl::types::GLsizeiptr,
-            vertices.as_ptr() as *const gl::types::GLvoid,
-            gl::STATIC_DRAW,
-        );
-    }
-
-    let mut color_buffer: gl::types::GLuint = 0;
-    unsafe {
-        gl::GenBuffers(1, &mut color_buffer);
-        gl::BindBuffer(gl::ARRAY_BUFFER, color_buffer);
-        gl::BufferData(
-            gl::ARRAY_BUFFER,
-            (color_data.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
-            color_data.as_ptr() as *const gl::types::GLvoid,
-            gl::STATIC_DRAW,
-        );
-    }
-
-    unsafe {
-        gl::EnableVertexAttribArray(0);
-        gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-        gl::VertexAttribPointer(
-            0,
-            3,
-            gl::FLOAT,
-            gl::FALSE,
-            0,
-            std::ptr::null(),
-        );
-    }
-
-    unsafe {
-        gl::EnableVertexAttribArray(1);
-        gl::BindBuffer(gl::ARRAY_BUFFER, color_buffer);
-        gl::VertexAttribPointer(
-            1,
-            3,
-            gl::FLOAT,
-            gl::FALSE,
-            0,
-            std::ptr::null(),
-        );
-    }
+    model.set_buffers();
+    model.config_buffer();
 
     unsafe {
         gl::ClearColor(0.3, 0.3, 0.3, 1.0);
@@ -185,16 +72,19 @@ fn run() -> Result<(), String>{
         gl::DepthFunc(gl::LESS)
     }
 
-    let program_id = load_shader(
+    let program = Program::from_shaders_source(
         &CString::new(include_str!("triangle.vert")).map_err(|_| "error: vertex shader".to_string())?,
         &CString::new(include_str!("triangle.frag")).map_err(|_| "error: fragment shader".to_string())?
     )?;
 
     let translation_matrix_name = CString::new("Translation").map_err(|_| "error: GetUniformLocation".to_string())?;
-    let translation_matrix_id = unsafe {gl::GetUniformLocation(program_id, translation_matrix_name.as_ptr()) };
+    let translation_matrix_id = unsafe {gl::GetUniformLocation(program.id(), translation_matrix_name.as_ptr()) };
 
     let rotation_matrix_name = CString::new("Rotation").map_err(|_| "error: GetUniformLocation".to_string())?;
-    let rotation_matrix_id = unsafe {gl::GetUniformLocation(program_id, rotation_matrix_name.as_ptr()) };
+    let rotation_matrix_id = unsafe {gl::GetUniformLocation(program.id(), rotation_matrix_name.as_ptr()) };
+
+    let scale_matrix_name = CString::new("Scale").map_err(|_| "error: GetUniformLocation".to_string())?;
+    let scale_matrix_id = unsafe {gl::GetUniformLocation(program.id(), scale_matrix_name.as_ptr()) };
 
     let projection_matrix = Matrix::make_perspective_projection_matrix(
         std::f32::consts::FRAC_PI_4,
@@ -203,16 +93,19 @@ fn run() -> Result<(), String>{
         20.0
     );
     let projection_matrix_name = CString::new("Projection").map_err(|_| "error: GetUniformLocation".to_string())?;
-    let projection_matrix_id = unsafe {gl::GetUniformLocation(program_id, projection_matrix_name.as_ptr()) };
+    let projection_matrix_id = unsafe {gl::GetUniformLocation(program.id(), projection_matrix_name.as_ptr()) };
     let projection_matrix_ptr = unsafe { std::mem::transmute(&projection_matrix) };
 
     let mut translation_x = 0.0;
     let mut translation_y = 0.0;
     let mut translation_z = 2.0;
 
-    let mut direction_vec = Point::new(-1.0, 1.0, -1.0).normalize();
-    let mut rotation_matrix = Matrix::make_rotate_matrix(&direction_vec, std::f32::consts::FRAC_PI_4).orthonormalization();
+    let mut direction_vec = Vec3d::new(-1.0, 1.0, -1.0).normalize();
+    let mut rotation_matrix = Matrix::make_rotate_matrix(&direction_vec, 0.0).orthonormalization();
     let mut rotation_matrix_ptr = unsafe { std::mem::transmute(&rotation_matrix) };
+
+    let scale_matrix = Matrix::make_scale_matrix((1.0 / model.get_max_size()).min(1000.0));
+    let scale_matrix_ptr = unsafe { std::mem::transmute(&scale_matrix) };
 
     let mut before_timestamp = time::Instant::now();
 
@@ -243,12 +136,12 @@ fn run() -> Result<(), String>{
                     } else if mousestate.middle() {
                         if yrel == 0 {
                             let v = if xrel > 0 {1} else {-1} as f32;
-                            direction_vec = Point::new(0.0, v, 0.0);
+                            direction_vec = Vec3d::new(0.0, v, 0.0);
                         } else if xrel == 0 {
                             let v = if yrel > 0 {1} else {-1} as f32;
-                            direction_vec = Point::new(v, 0.0, 0.0);
+                            direction_vec = Vec3d::new(v, 0.0, 0.0);
                         } else {
-                            direction_vec = Point::new(yrel as f32, xrel as f32, 0.0).normalize();
+                            direction_vec = Vec3d::new(yrel as f32, xrel as f32, 0.0).normalize();
                         }
                         let temp_matrix = Matrix::make_rotate_matrix(
                             &direction_vec,
@@ -281,97 +174,18 @@ fn run() -> Result<(), String>{
         let translation_matrix = Matrix::make_translation_matrix(translation_x, translation_y, translation_z);
         let translation_matrix_ptr = unsafe { std::mem::transmute(&translation_matrix) };
 
+
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
             gl::UniformMatrix4fv(translation_matrix_id, 1, gl::TRUE, translation_matrix_ptr);
             gl::UniformMatrix4fv(rotation_matrix_id, 1, gl::TRUE, rotation_matrix_ptr);
+            gl::UniformMatrix4fv(scale_matrix_id, 1, gl::TRUE, scale_matrix_ptr);
             gl::UniformMatrix4fv(projection_matrix_id, 1, gl::TRUE, projection_matrix_ptr);
-            gl::UseProgram(program_id);
-            gl::DrawArrays(
-                gl::TRIANGLES,
-                0,
-                12*3,
-                // 3,
-            );
         }
-
+        program.set_used();
+        model.draw();
         window.gl_swap_window();
     }
 
     Ok(())
-}
-
-
-fn load_shader(vertex_shader: &CStr, fragment_shader: &CStr) -> Result<gl::types::GLuint, String> {
-    let vertex_shader_id = shader_from_source(vertex_shader, gl::VERTEX_SHADER)?;
-    let fragment_shader_id = shader_from_source(fragment_shader, gl::FRAGMENT_SHADER)?;
-
-    let program_id = unsafe { gl::CreateProgram() };
-    unsafe {
-        gl::AttachShader(program_id, vertex_shader_id);
-        gl::AttachShader(program_id, fragment_shader_id);
-        gl::LinkProgram(program_id);
-    }
-
-    let mut success: gl::types::GLint = 1;
-    unsafe {
-        gl::GetShaderiv(program_id, gl::LINK_STATUS, &mut success);
-    }
-
-    if success == 0 {
-        return shader_error_case_return(program_id)
-    }
-
-    unsafe {
-        gl::DeleteShader(vertex_shader_id);
-        gl::DeleteShader(fragment_shader_id);
-    }
-
-    Ok(program_id)
-}
-
-
-fn shader_from_source(source: &CStr, kind: gl::types::GLenum) -> Result<gl::types::GLuint, String> {
-    let id = unsafe { gl::CreateShader(kind) };
-    unsafe {
-        gl::ShaderSource(id, 1, &source.as_ptr(), std::ptr::null());
-        gl::CompileShader(id);
-    }
-
-    let mut success: gl::types::GLint = 1;
-    unsafe {
-        gl::GetShaderiv(id, gl::COMPILE_STATUS, &mut success);
-    }
-
-    if success == 0 {
-        return shader_error_case_return(id)
-    }
-
-    Ok(id)
-}
-
-fn shader_error_case_return(id: u32) -> Result<gl::types::GLuint, String> {
-    let mut len: gl::types::GLint = 0;
-    unsafe {
-        gl::GetShaderiv(id, gl::INFO_LOG_LENGTH, &mut len);
-    }
-
-    let error = create_whitespace_cstring_with_len(len as usize);
-
-    unsafe {
-        gl::GetShaderInfoLog(
-            id,
-            len,
-            std::ptr::null_mut(),
-            error.as_ptr() as *mut gl::types::GLchar,
-        );
-    }
-
-    return Err(error.to_string_lossy().into_owned());
-}
-
-fn create_whitespace_cstring_with_len(len: usize) -> CString {
-    let mut buffer: Vec<u8> = Vec::with_capacity(len + 1);
-    buffer.extend([b' '].iter().cycle().take(len));
-    unsafe { CString::from_vec_unchecked(buffer) }
 }
