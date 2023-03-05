@@ -1,4 +1,4 @@
-use crate::mat::{Vec3d, Matrix};
+use crate::mat::Vec3d;
 
 
 pub struct Model {

@@ -26,6 +26,15 @@ impl Matrix {
         &self.elem
     }
 
+    pub fn make_identity_matrix() -> Self {
+        Matrix::new([
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
+    }
+
     pub fn make_scale_matrix(value: f32) -> Self {
         Matrix::new([
             [value, 0.0, 0.0, 0.0],

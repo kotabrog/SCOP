@@ -8,4 +8,6 @@
 !Makefile
 !LICENSE
 !author
+!*.frag
+!*.vert
 target/
