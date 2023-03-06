@@ -67,6 +67,7 @@ fn run() -> Result<(), String>{
         gl::BindVertexArray(vao);
     }
 
+    model.set_uv();
     model.set_buffers();
     model.config_buffer();
 

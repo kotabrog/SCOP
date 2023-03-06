@@ -68,6 +68,44 @@ impl Model {
         self.indices.push(value);
     }
 
+    fn set_uv_to_non_indices(&mut self) {
+        for i in 0..self.vertices.len() {
+            if i % 4 == 0 {
+                self.uv.push(Vec2d::new(0.0, 0.0));
+            } else if i % 4 == 1 {
+                self.uv.push(Vec2d::new(1.0, 0.0));
+            } else if i % 4 == 2 {
+                self.uv.push(Vec2d::new(0.0, 1.0));
+            } else {
+                self.uv.push(Vec2d::new(1.0, 1.0));
+            }
+        }
+    }
+
+    fn set_uv_to_has_indices(&mut self) {
+        for i in 0..self.vertices.len() {
+            if i % 4 == 0 {
+                self.uv.push(Vec2d::new(0.0, 0.0));
+            } else if i % 4 == 1 {
+                self.uv.push(Vec2d::new(1.0, 0.0));
+            } else if i % 4 == 2 {
+                self.uv.push(Vec2d::new(0.0, 1.0));
+            } else {
+                self.uv.push(Vec2d::new(1.0, 1.0));
+            }
+        }
+    }
+
+    pub fn set_uv(&mut self) {
+        if !self.uv.is_empty() {
+            return;
+        } else if self.indices.is_empty() {
+            self.set_uv_to_non_indices();
+        } else {
+            self.set_uv_to_has_indices();
+        }
+    }
+
     pub fn set_buffers(&mut self) {
         unsafe {
             gl::GenBuffers(1, &mut self.vbo);
