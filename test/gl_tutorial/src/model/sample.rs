@@ -20,6 +20,7 @@ impl Model {
             0, 1, 2, 0, 3, 2
         ];
         self.max_size = 1.0;
+        self.set_index_set(3);
     }
 
     #[allow(dead_code)]
@@ -40,6 +41,7 @@ impl Model {
             0, 1, 2, 0, 3, 2
         ];
         self.max_size = 1.0;
+        self.set_index_set(3);
     }
 
     #[allow(dead_code)]

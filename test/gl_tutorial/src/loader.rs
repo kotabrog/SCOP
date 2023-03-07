@@ -25,7 +25,7 @@ impl Loader {
             match line[0] {
                 "v" => self.parse_v(model, &line)?,
                 "f" => self.parse_f(model, &line)?,
-                _ => return Err(format!("error: parse obj: {}", line[0]))
+                _ => {}
             }
         }
         if model.is_empty() {
@@ -46,15 +46,22 @@ impl Loader {
     }
 
     fn parse_f(&self, model: &mut Model, line: &Vec<&str>) -> Result<(), String> {
-        if line.len() != 4 {
-            return Err(format!("error: parse obj: {}", line.join(" ")))
+        if model.get_index_set() == 0 {
+            model.set_index_set(line.len() - 1);
         }
-        let x1: u32 = line[1].parse().map_err(|_| format!("error: parse obj: {}", line[1]))?;
-        let x2: u32 = line[2].parse().map_err(|_| format!("error: parse obj: {}", line[2]))?;
-        let x3: u32 = line[3].parse().map_err(|_| format!("error: parse obj: {}", line[3]))?;
-        model.push_indices(x1.saturating_sub(1));
-        model.push_indices(x2.saturating_sub(1));
-        model.push_indices(x3.saturating_sub(1));
+        if line.len() < 3 {
+            return Err(format!("error: parse obj: {}", line.join(" ")))
+        } else if model.get_index_set() != 1 &&
+            line.len() != model.get_index_set() + 1 {
+            model.set_index_set(1);
+        }
+        for i in 1..line.len() {
+            model.push_indices(
+                line[i].parse::<u32>()
+                    .map_err(|_| format!("error: parse obj: {}", line[i]))?
+                    .saturating_sub(1));
+        }
+        model.push_index_count(line.len() - 1);
         Ok(())
     }
 }

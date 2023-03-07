@@ -10,6 +10,8 @@ pub struct Model {
     colors: Vec<Vec3d>,
     uv: Vec<Vec2d>,
     indices: Vec<gl::types::GLuint>,
+    index_set: usize,
+    index_count: Vec<usize>,
     vbo: gl::types::GLuint,
     cbo: gl::types::GLuint,
     tbo: gl::types::GLuint,
@@ -30,6 +32,8 @@ impl Model {
             colors: Vec::new(),
             uv: Vec::new(),
             indices: Vec::new(),
+            index_set: 0,
+            index_count: Vec::new(),
             vbo: 0,
             cbo: 0,
             tbo: 0,
@@ -45,6 +49,18 @@ impl Model {
 
     pub fn get_max_size(&self) -> f32 {
         self.max_size
+    }
+
+    pub fn get_index_set(&self) -> usize {
+        self.index_set
+    }
+
+    pub fn set_index_set(&mut self, index_set: usize) {
+        self.index_set = index_set
+    }
+
+    pub fn push_index_count(&mut self, count: usize) {
+        self.index_count.push(count);
     }
 
     pub fn is_empty(&self) -> bool {
@@ -194,7 +210,7 @@ impl Model {
         self.texture_on.switch();
     }
 
-    pub fn draw(&self) {
+    pub fn draw(&self) -> Result<(), String>{
         self.texture_on.set();
         if self.indices.is_empty() {
             unsafe {
@@ -205,15 +221,82 @@ impl Model {
                 );
             }
         } else {
-            unsafe {
-                gl::DrawElements(
-                    gl::TRIANGLES,
-                    self.indices.len() as i32,
-                    gl::UNSIGNED_INT,
-                    std::ptr::null()
-                );
+            match self.index_set {
+                3 => {
+                    self.draw_one_elements(
+                        0,
+                        self.indices.len() as i32,
+                        3
+                    )?;
+                },
+                4 => {
+                    self.draw_one_elements(
+                        0,
+                        self.indices.len() as i32,
+                        4
+                    )?;
+                },
+                1 => {
+                    let mut index = 0;
+                    let mut count_index = 0;
+                    let mut index_set = 0;
+                    let mut start_index = 0;
+                    while index < self.indices.len() &&
+                            count_index < self.index_count.len() {
+                        if index == start_index {
+                            index_set = self.index_count[count_index];
+                            index += index_set;
+                            count_index += 1;
+                        } else if index_set != 3 || index_set != self.index_count[count_index] {
+                            self.draw_one_elements(
+                                start_index,
+                                (index - start_index) as i32,
+                                index_set as i32
+                            )?;
+                            start_index = index;
+                        } else {
+                            index += index_set;
+                            count_index += 1;
+                        }
+                    }
+                    if index != start_index {
+                        let count = if index != self.indices.len() {
+                            (index - start_index).saturating_sub(1)
+                        } else {
+                            index - start_index
+                        };
+                        if count > 0 {
+                            self.draw_one_elements(
+                                start_index,
+                                count as i32,
+                                index_set as i32
+                            )?;
+                        }
+                    }
+                },
+                _ => return Err(format!("error: index set is 3 or 4"))
             }
         }
+        Ok(())
+    }
+
+    fn draw_one_elements(&self, index: usize, count: i32, index_set: i32) -> Result<(), String>{
+        let mode = match index_set {
+            3 => gl::TRIANGLES,
+            4 => gl::TRIANGLE_FAN,
+            // 4 => gl::TRIANGLE_STRIP,
+            // 4 => gl::QUADS,
+            _ => return Err(format!("error: index set is 3 or 4"))
+        };
+        unsafe {
+            gl::DrawElements(
+                mode,
+                count,
+                gl::UNSIGNED_INT,
+                (index * std::mem::size_of::<gl::types::GLuint>()) as *const std::os::raw::c_void
+            );
+        }
+        Ok(())
     }
 }
 

@@ -79,8 +79,8 @@ fn run() -> Result<(), String>{
     }
 
     let program = Program::from_shaders_source(
-        &CString::new(include_str!("triangle.vert")).map_err(|_| "error: vertex shader".to_string())?,
-        &CString::new(include_str!("triangle.frag")).map_err(|_| "error: fragment shader".to_string())?
+        &CString::new(include_str!("../asserts/shaders/triangle.vert")).map_err(|_| "error: vertex shader".to_string())?,
+        &CString::new(include_str!("../asserts/shaders/triangle.frag")).map_err(|_| "error: fragment shader".to_string())?
     )?;
 
     let mut mvp = MVP::new(
@@ -193,7 +193,7 @@ fn run() -> Result<(), String>{
         }
         program.set_used();
         mvp.set();
-        model.draw();
+        model.draw()?;
         window.gl_swap_window();
     }
 
