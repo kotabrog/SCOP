@@ -1,12 +1,12 @@
 NAME := scop_display
 
 release:
-	@cd SCOP && cargo build --release
-	@cp SCOP/target/release/SCOP ./$(NAME)
+	@cd scop && cargo build --release
+	@cp scop/target/release/scop ./$(NAME)
 
 debug:
-	@cd SCOP && cargo build
-	@cp SCOP/target/debug/SCOP ./$(NAME)
+	@cd scop && cargo build
+	@cp scop/target/debug/scop ./$(NAME)
 
 $(NAME): release
 
