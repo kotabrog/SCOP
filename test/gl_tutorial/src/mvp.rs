@@ -130,6 +130,17 @@ impl MVP {
         self.rotation_matrix.matrix_update(rotation_matrix);
     }
 
+    pub fn update_z_rotate_matrix(&mut self, x: i32, diff_time: f32) {
+        let direction_vec = Vec3d::new(0.0, 0.0, 1.0);
+        let rotation_matrix =
+            Matrix::make_rotate_matrix(
+                &direction_vec,
+                x as f32 * std::f32::consts::PI * ROTATION_SPEED * diff_time / 1000.0
+            ).mul(&self.rotation_matrix.matrix)
+            .orthonormalization();
+        self.rotation_matrix.matrix_update(rotation_matrix);
+    }
+
     pub fn set(&self) {
         self.center_matrix.set();
         self.scale_matrix.set();

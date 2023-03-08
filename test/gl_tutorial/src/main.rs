@@ -158,6 +158,8 @@ fn run() -> Result<(), String>{
                             yrel,
                             diff_timestamp as f32
                         );
+                    } else if mousestate.right() && xrel != 0 {
+                        mvp.update_z_rotate_matrix(xrel, diff_timestamp as f32);
                     }
                 }
                 sdl2::event::Event::MouseWheel {
