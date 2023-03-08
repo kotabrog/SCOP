@@ -86,6 +86,7 @@ fn run() -> Result<(), String>{
     let mut mvp = MVP::new(
         program.id(),
         model.get_max_size(),
+        model.get_vertices(),
         window_size
     )?;
 

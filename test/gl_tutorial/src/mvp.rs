@@ -15,6 +15,7 @@ const ROTATION_SPEED: f32 = 0.5;
 
 #[derive(Debug)]
 pub struct MVP {
+    center_matrix: MVPMatrix,
     scale_matrix: MVPMatrix,
     rotation_matrix: MVPMatrix,
     translation_matrix: MVPMatrix,
@@ -32,8 +33,10 @@ pub struct MVPMatrix {
 impl MVP {
     pub fn new(program_id: gl::types::GLuint,
         scale_max_size: f32,
+        vertices: &Vec<Vec3d>,
         window_size: (u32, u32)
     ) -> Result<Self, String> {
+        let center_matrix = Self::make_center_matrix(vertices);
         let scale_matrix = Self::make_scale_matrix(scale_max_size);
         let rotation_matrix = Matrix::make_identity_matrix();
         let translation_vec = Vec3d::new(0.0, 0.0, DEFAULT_TRANSLATION_Z);
@@ -41,6 +44,9 @@ impl MVP {
         let projection_matrix = Self::make_projection_matrix(window_size);
 
         Ok(Self {
+            center_matrix: MVPMatrix::new(
+                program_id, "Center", center_matrix
+            )?,
             scale_matrix: MVPMatrix::new(
                 program_id, "Scale", scale_matrix
             )?,
@@ -55,6 +61,16 @@ impl MVP {
             )?,
             translation_vec
         })
+    }
+
+    fn make_center_matrix(vertices: &Vec<Vec3d>) -> Matrix {
+        let mut vec = Vec3d::new(0.0, 0.0, 0.0);
+        for v in vertices {
+            vec = vec.add(v);
+        }
+        vec = vec.mul(- 1.0 / vertices.len() as f32);
+        println!("{:?}", vec);
+        return Self::make_translation_matrix(&vec)
     }
 
     fn make_scale_matrix(scale_max_size: f32) -> Matrix {
@@ -115,6 +131,7 @@ impl MVP {
     }
 
     pub fn set(&self) {
+        self.center_matrix.set();
         self.scale_matrix.set();
         self.rotation_matrix.set();
         self.translation_matrix.set();

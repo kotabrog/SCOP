@@ -51,6 +51,10 @@ impl Model {
         self.max_size
     }
 
+    pub fn get_vertices(&self) -> &Vec<Vec3d> {
+        &self.vertices
+    }
+
     pub fn get_index_set(&self) -> usize {
         self.index_set
     }
