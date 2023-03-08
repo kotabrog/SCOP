@@ -229,13 +229,6 @@ impl Model {
                         3
                     )?;
                 },
-                4 => {
-                    self.draw_one_elements(
-                        0,
-                        self.indices.len() as i32,
-                        4
-                    )?;
-                },
                 1 => {
                     let mut index = 0;
                     let mut count_index = 0;
@@ -282,11 +275,9 @@ impl Model {
 
     fn draw_one_elements(&self, index: usize, count: i32, index_set: i32) -> Result<(), String>{
         let mode = match index_set {
+            1 | 2 => return Err(format!("error: unsupported index set 1 or 2")),
             3 => gl::TRIANGLES,
-            4 => gl::TRIANGLE_FAN,
-            // 4 => gl::TRIANGLE_STRIP,
-            // 4 => gl::QUADS,
-            _ => return Err(format!("error: index set is 3 or 4"))
+            _ => gl::TRIANGLE_FAN,
         };
         unsafe {
             gl::DrawElements(

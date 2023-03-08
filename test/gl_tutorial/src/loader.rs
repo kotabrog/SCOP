@@ -52,7 +52,7 @@ impl Loader {
         if line.len() < 3 {
             return Err(format!("error: parse obj: {}", line.join(" ")))
         } else if model.get_index_set() != 1 &&
-            line.len() != model.get_index_set() + 1 {
+            line.len() != 4 {
             model.set_index_set(1);
         }
         for i in 1..line.len() {
