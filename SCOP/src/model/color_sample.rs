@@ -42,4 +42,24 @@ impl Model {
             }
         }
     }
+
+    #[allow(dead_code)]
+    pub fn set_colors_gray(&mut self, class: usize) {
+        let length = if self.indices.is_empty() {
+            self.vertices.len() / 3
+        } else {
+            self.index_count.len()
+        };
+        for i in 0..length {
+            let color = ((i % class + 1) as f32) / (class + 1) as f32;
+            let count = if self.indices.is_empty() {
+                3
+            } else {
+                self.index_count[i]
+            };
+            for _ in 0..count {
+                self.colors.push(Vec3d::new(color, color, color));
+            }
+        }
+    }
 }

@@ -28,17 +28,21 @@ fn run() -> Result<(), String>{
     if args.len() == 2 {
         let loader = Loader::new(args[1].clone());
         loader.parse(&mut model)?;
+        model.resolve_duplicate_indices();
         // model.set_colors_one(1.0);
         // model.set_colors_gradation();
         // model.set_colors_gradation_colorful();
-        model.set_colors_grain();
+        // model.set_colors_grain();
+        model.set_colors_gray(6);
     } else {
         // model.set_cube_sample();
         // model.set_rect_sample();
         // model.set_rect_uv_sample();
         model.set_cube_sample_uv();
+        model.resolve_duplicate_indices();
         // model.set_colors_grain();
-        model.set_colors_gradation();
+        // model.set_colors_gradation();
+        model.set_colors_gray(6);
     }
 
     let sdl = sdl2::init()?;

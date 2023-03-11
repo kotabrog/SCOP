@@ -21,6 +21,7 @@ impl Model {
         ];
         self.max_size = 1.0;
         self.set_index_set(3);
+        self.index_count = vec![3, 3]
     }
 
     #[allow(dead_code)]
@@ -42,6 +43,7 @@ impl Model {
         ];
         self.max_size = 1.0;
         self.set_index_set(3);
+        self.index_count = vec![3, 3]
     }
 
     #[allow(dead_code)]

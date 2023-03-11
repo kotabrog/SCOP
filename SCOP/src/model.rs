@@ -88,6 +88,18 @@ impl Model {
         self.indices.push(value);
     }
 
+    pub fn resolve_duplicate_indices(&mut self) {
+        if self.indices.is_empty() {
+            return;
+        }
+        let mut vertices = Vec::new();
+        for index in &self.indices {
+            vertices.push(self.vertices[*index as usize])
+        }
+        self.indices = (0..vertices.len() as gl::types::GLuint).collect();
+        self.vertices = vertices;
+    }
+
     fn set_uv_to_non_indices(&mut self) {
         for i in 0..self.vertices.len() {
             if i % 4 == 0 {
