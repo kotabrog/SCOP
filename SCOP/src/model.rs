@@ -105,9 +105,9 @@ impl Model {
             if i % 4 == 0 {
                 self.uv.push(Vec2d::new(0.0, 0.0));
             } else if i % 4 == 1 {
-                self.uv.push(Vec2d::new(1.0, 0.0));
-            } else if i % 4 == 2 {
                 self.uv.push(Vec2d::new(0.0, 1.0));
+            } else if i % 4 == 2 {
+                self.uv.push(Vec2d::new(1.0, 0.0));
             } else {
                 self.uv.push(Vec2d::new(1.0, 1.0));
             }
@@ -115,15 +115,32 @@ impl Model {
     }
 
     fn set_uv_to_has_indices(&mut self) {
-        for i in 0..self.vertices.len() {
-            if i % 4 == 0 {
-                self.uv.push(Vec2d::new(0.0, 0.0));
-            } else if i % 4 == 1 {
-                self.uv.push(Vec2d::new(1.0, 0.0));
-            } else if i % 4 == 2 {
-                self.uv.push(Vec2d::new(0.0, 1.0));
+        let mut triangle_flag = false;
+        for count in &self.index_count {
+            if *count == 3 {
+                if triangle_flag {
+                    self.uv.push(Vec2d::new(0.0, 0.0));
+                    self.uv.push(Vec2d::new(0.0, 1.0));
+                    self.uv.push(Vec2d::new(1.0, 1.0));
+                } else {
+                    self.uv.push(Vec2d::new(0.0, 0.0));
+                    self.uv.push(Vec2d::new(1.0, 0.0));
+                    self.uv.push(Vec2d::new(1.0, 1.0));
+
+                }
+                triangle_flag = !triangle_flag;
             } else {
-                self.uv.push(Vec2d::new(1.0, 1.0));
+                for i in 0..*count {
+                    if i % 4 == 0 {
+                        self.uv.push(Vec2d::new(0.0, 0.0));
+                    } else if i % 4 == 1 {
+                        self.uv.push(Vec2d::new(0.0, 1.0));
+                    } else if i % 4 == 2 {
+                        self.uv.push(Vec2d::new(1.0, 0.0));
+                    } else {
+                        self.uv.push(Vec2d::new(1.0, 1.0));
+                    }
+                }
             }
         }
     }
