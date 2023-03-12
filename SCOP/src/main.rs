@@ -9,11 +9,13 @@ mod loader;
 mod model;
 mod shader;
 mod mvp;
+mod img_loader;
 
 use loader::Loader;
 use model::Model;
 use shader::Program;
 use mvp::MVP;
+use img_loader::Image;
 
 fn main() {
     if let Err(e) = run() {
@@ -44,6 +46,7 @@ fn run() -> Result<(), String>{
         // model.set_colors_gradation();
         model.set_colors_gray(6);
     }
+    let img = Image::new("./scop/asserts/textures/sweets_shiroi_taiyaki_white.bmp")?;
 
     let sdl = sdl2::init()?;
     let video_subsystem = sdl.video()?;
@@ -96,13 +99,22 @@ fn run() -> Result<(), String>{
 
     model.set_texture(program.id())?;
 
-    let mut bits: [[[f32; 3]; 64]; 64] = [[[0.0; 3]; 64]; 64];
+    // let mut bits: [[[f32; 3]; 64]; 64] = [[[0.0; 3]; 64]; 64];
+    // for i in 0..64 {
+    //     let r = (i * 4) as f32 / 256.0;
+    //     for j in 0..64 {
+    //         bits[i][j][0] = r;
+    //         bits[i][j][1] = (j * 4) as f32 / 256.0;
+    //         bits[i][j][2] = r;
+    //     }
+    // }
+    let mut bits = vec![0.0; 64 * 64 * 3];
     for i in 0..64 {
         let r = (i * 4) as f32 / 256.0;
         for j in 0..64 {
-            bits[i][j][0] = r;
-            bits[i][j][1] = (j * 4) as f32 / 256.0;
-            bits[i][j][2] = r;
+            bits[i * 64 * 3 + j * 3 + 0] = r;
+            bits[i * 64 * 3 + j * 3 + 1] = (j * 4) as f32 / 256.0;
+            bits[i * 64 * 3 + j * 3 + 2] = r;
         }
     }
     let mut tex_id: gl::types::GLuint = 0;
@@ -115,15 +127,26 @@ fn run() -> Result<(), String>{
             gl::TEXTURE_2D,
             0,
             gl::RGB as i32,
-            64 as i32,
-            64 as i32,
+            img.get_width() as i32,
+            img.get_height() as i32,
             0,
             gl::RGB,
             gl::FLOAT,
-            // gl::FLOAT,
-            // gl::UNSIGNED_INT,
-            bits.as_ptr() as *const _,
+            img.get_ptr(),
         );
+        // gl::TexImage2D(
+        //     gl::TEXTURE_2D,
+        //     0,
+        //     gl::RGB as i32,
+        //     64 as i32,
+        //     64 as i32,
+        //     0,
+        //     gl::RGB,
+        //     gl::FLOAT,
+        //     // gl::FLOAT,
+        //     // gl::UNSIGNED_INT,
+        //     bits.as_ptr() as *const _,
+        // );
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);

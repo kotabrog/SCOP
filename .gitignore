@@ -10,4 +10,5 @@
 !author
 !*.frag
 !*.vert
+!*.bmp
 target/

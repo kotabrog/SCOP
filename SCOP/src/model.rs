@@ -136,9 +136,9 @@ impl Model {
                     } else if i % 4 == 1 {
                         self.uv.push(Vec2d::new(0.0, 1.0));
                     } else if i % 4 == 2 {
-                        self.uv.push(Vec2d::new(1.0, 0.0));
-                    } else {
                         self.uv.push(Vec2d::new(1.0, 1.0));
+                    } else {
+                        self.uv.push(Vec2d::new(1.0, 0.0));
                     }
                 }
             }
