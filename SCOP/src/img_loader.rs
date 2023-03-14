@@ -31,6 +31,7 @@ impl Image {
         &self.data
     }
 
+    #[allow(dead_code)]
     pub fn get_ptr(&self) -> *const c_void {
         self.data.as_ptr() as *const c_void
     }

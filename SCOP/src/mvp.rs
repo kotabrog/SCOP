@@ -25,6 +25,7 @@ pub struct MVP {
 
 #[derive(Debug)]
 pub struct MVPMatrix {
+    #[allow(dead_code)]
     name: CString,
     id: i32,
     matrix: Matrix,
@@ -156,10 +157,12 @@ impl MVPMatrix {
         Ok(Self { name, id, matrix })
     }
 
+    #[allow(dead_code)]
     pub fn matrix(&self) -> &Matrix {
         &self.matrix
     }
 
+    #[allow(dead_code)]
     pub fn name(&self) -> &CString {
         &self.name
     }

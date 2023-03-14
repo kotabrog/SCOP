@@ -18,6 +18,7 @@ pub struct Vec2d {
     pub d1: f32,
 }
 
+#[allow(dead_code)]
 pub enum Axis {
     X,
     Y,
@@ -29,6 +30,7 @@ impl Matrix {
         Self { elem: vec }
     }
 
+    #[allow(dead_code)]
     pub fn inner(&mut self) -> &[[f32; 4]; 4] {
         &self.elem
     }
@@ -51,6 +53,7 @@ impl Matrix {
         ])
     }
 
+    #[allow(dead_code)]
     pub fn make_rotate_one_axis_matrix(axis: Axis, theta: f32) -> Self {
         match axis {
             Axis::X => Matrix::new([
@@ -132,6 +135,7 @@ impl Matrix {
         ret
     }
 
+    #[allow(dead_code)]
     pub fn normalize_part(&self) -> Self {
         let mut matrix = self.clone();
         for i in 0..3 {
