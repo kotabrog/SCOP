@@ -5,11 +5,11 @@ use crate::mat::{Matrix, Vec3d};
 
 const MAX_SCALE: f32 = 1000.0;
 const DEFAULT_TRANSLATION_Z: f32 = 2.0;
-const PROJECTION_FOV: f32 = std::f32::consts::FRAC_PI_4;
+const PROJECTION_FOV: f32 = std::f32::consts::FRAC_PI_6;
 const PROJECTION_NEAR: f32 = -1.0;
 const PROJECTION_FAR: f32 = 20.0;
-const TRANSLATION_SPEED: f32 = 0.5;
-const TRANSLATION_WHEEL_SPEED: f32 = 0.5;
+const TRANSLATION_SPEED: f32 = 0.6;
+const TRANSLATION_WHEEL_SPEED: f32 = 0.4;
 const ROTATION_SPEED: f32 = 0.5;
 
 

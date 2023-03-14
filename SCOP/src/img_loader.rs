@@ -27,6 +27,10 @@ impl Image {
         })
     }
 
+    pub fn get_data(&self) -> &Vec<f32> {
+        &self.data
+    }
+
     pub fn get_ptr(&self) -> *const c_void {
         self.data.as_ptr() as *const c_void
     }
