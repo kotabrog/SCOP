@@ -1,6 +1,7 @@
 # SCOP
 
-https://github.com/kotabrog/SCOP/blob/main/img/cube.mp4
+
+https://user-images.githubusercontent.com/55497343/226149531-847625d6-16f5-4cfc-96b3-d8403a4cd962.mp4
 ![img](https://github.com/kotabrog/SCOP/blob/main/img/42_with_taiyaki.png)
 ![img](https://github.com/kotabrog/SCOP/blob/main/img/teapot.png)
 
